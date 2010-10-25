@@ -1,0 +1,47 @@
+--- 
+wordpress_id: 41
+layout: post
+title: "Dojo Tips: Declarative Grid, Programmatic Store"
+wordpress_url: http://www.joelpm.com/?p=41
+---
+As I've been getting used to Dojo for the last couple weeks I've found myself going back and forth on what should be declaratively created and what should be programmatically created. I've come to the conclusion that widgets should, when possible, be constructed declaratively while data stores should be programmatically created. This is because widgets typically represent something that shows up on the screen and when dealing with HTML these items are typically declared in the document. Data stores, on the other hand, represent a behind-the-scenes connection to the server or some other resource, which isn't part of the interface and therefore shouldn't show up in the interface source code (i.e. the HTML markup).
+
+That being said, here's an example of how I'd structure the code for a grid:
+{% highlight html4strict %}
+<table dojoAttachPoint="propsGridAP"
+       dojoType="dojox.grid.DataGrid"
+       title="Properties"
+       selectionMode="single"
+       style="width: 180px; height: 200px;">
+  <thead>
+    <tr>
+      <th field="property" width="auto">Property</th>
+      <th field="value" width="auto" editable="true">Value</th>
+    </tr>
+  </thead>
+</table>
+{% endhighlight %}
+You'll notice that the store and query parameters aren't set. We set these parameters after the table is created, either in the postCreate() function if the code is in a widget, or in an onLoad handler if the code is in the main page. Here's the javascript for how to set the store and query:
+
+{% highlight javascript %}
+// ...
+postCreate: function() {
+  var data = {
+    identifier: "id",
+    label: "name",
+    items: [
+      {id: 0, name: "Property 1", value: "Value 1"}
+      {id: 1, name: "Property 2", value: "Value 2"}
+      // etc.
+    ]
+  };
+
+  var propertiesDS = new dojo.data.ItemFileReadStore({
+    data: data
+  });
+
+  this.propsGridAP.setStore(propertiesDS, ""); // second param is the query to use
+}
+{% endhighlight %}
+
+This lets you cleanly separate the widget/rendering code from the data/logic code, which is a good idea.

@@ -1,0 +1,84 @@
+--- 
+wordpress_id: 36
+layout: post
+title: "From the Archives: Mephisto + Capistrano + SVN + Site5"
+wordpress_url: http://www.joelpm.com/?p=36
+categories: ['mephisto', 'site5']
+---
+<em>Thanks to Google Analytics I can see that a fair number of people still come here looking for this article. Since I've stopped using Mephisto and don't play with RoR anymore I don't know how useful this article actually is, but I know how frustrating it can be to think you've finally found a page that deals exactly with what you're looking for and then getting a 404 when you click on the link. So... it's back, but please note that things have most likely changed in Mephisto, Capistrano, and Rails since this was originally written (back in May of 2007).</em>
+
+Since I get to play with Java at work all day I decided to spend the free minutes I have on Ruby/Rails. Towards that end I decided I'd start with an app that already existed and peak at its innards while extending it. A blogging application seemed like the perfect start and Mephisto, based on what I've read, is much simpler than Typo so I chose it.
+
+My goal was to get a full development environment set up so that I could develop and run locally, store code in Subversion, and deploy to the live site using Capistrano. My local development is done on OS X and the live site is on a shared host provided by Site5.
+
+There were a couple articles that I found very helpful. The first is over at <a href="http://www.thebitguru.com/">TheBitGuru</a> titled <a href="http://www.thebitguru.com/articles/9-Setting+up+Capistrano+on+Site5">Setting up Capistrano on Site5</a>. This article will help you get your Subversion repository set up and your Rails application 'Capistranized.' After you've done that head over to <a href="http://fluct.isono.us/">fluct.isono.us</a> and check out <a href="http://fluctisonous.com/2006/11/19/moving-home-with-capistrano-on-site5">Moving Home... with Capistrano on Site5</a> and part two <a href="http://fluctisonous.com/2006/12/3/deploy-mephisto-on-rails-rc1-with-capistrano">Deploy Mephisto on Rails RC1 with Capistrano</a>.
+
+After those articles you should have Mephisto checked into your Subversion repository on Site5 and deployable with a shared frozen rails via James' shared_rails rake task. It was at this point that I started running into some problems. I would deploy my code and nothing would happen - attempts to access joelpm.com would result in a 0 byte response and there were no results in the production log and nothing in the fastcgi crash log.
+
+As a sanity check I ran <a href="http://www.adamgreenfield.com/">Adam Greenfield</a>'s Mephisto <a href="http://www.adamgreenfield.com/2007/4/10/mephisto-install-script">install script</a> and everything worked, so I knew that it was possible to get Mephisto running on Site5. After that I started on the dozen different attempts to fix things, one of which included rewriting the shared_rails task based on the code in the rails:freeze:edge task.
+
+shared_rails.rake:
+{% highlight ruby %}
+desc "deploy shared rails environment"
+task :deploy_shared_rails do
+
+  ENV['SHARED_PATH'] = '../../shared' unless ENV['SHARED_PATH']
+  ENV['RAILS_PATH']  = File.join(ENV['SHARED_PATH'], 'rails')
+  svn_root = "http://dev.rubyonrails.org/svn/rails/"
+  symlink_path  = 'vendor/rails'
+
+  if ENV['TAG']
+    rails_svn = "#{svn_root}/tags/#{ENV['TAG']}"
+    export_path = "#{ENV['RAILS_PATH']}/tag_#{ENV['TAG']}"
+  else
+    rails_svn = "#{svn_root}/trunk"
+    if ENV['REVISION'].nil?
+      ENV['REVISION'] = /^r(d+)/.match(%x{svn -qr HEAD log #{svn_root}})[1]
+      puts "REVISION not set. Using HEAD, which is revision #{ENV['REVISION']}."
+    end
+    export_path = "#{ENV['RAILS_PATH']}/rev_#{ENV['REVISION']}"
+  end
+
+  # do we need to export this tag/revision?
+  unless File.exists?(export_path)
+    puts "setting up rails " + (ENV['TAG'] ? "tag #{ENV['TAG']}" : "rev #{ENV['REVISION']}")
+
+    mkdir_p export_path
+
+    get_framework do |framework|
+      system "svn export #{rails_svn}/#{framework} #{export_path}/#{framework}" + (ENV['REVISION'] ? " -r #{ENV['REVISION']}" : "")
+    end
+  end
+
+  puts 'linking rails'
+  rm_rf   symlink_path
+  mkdir_p symlink_path
+
+  get_framework do |framework|
+    ln_s File.expand_path("#{export_path}/#{framework}"), "#{symlink_path}/#{framework}"
+  end
+
+  touch symlink_path + (ENV['TAG'] ? "/TAG_#{ENV['TAG']}" :  "/REVISION_#{ENV['REVISION']}")
+end
+
+def get_framework
+  %w( railties actionpack activerecord actionmailer activesupport actionwebservice ).each do |framework|
+    yield framework
+  end
+end
+{% endhighlight %}
+I don't think rewriting the task actually fixed anything since the problem was elsewhere, but it was a good learning exercise and I'm posting it here for your reference.
+
+When I tried running dispatch.fcgi from the command line I kept getting this error:
+{% highlight bash %}
+undefined method `downcase' for nil:NilClass
+    //vendor/rails/actionpack/lib/action_controller/request.rb:20:in `method'
+{% endhighlight %}
+I thought surely this was the reason I couldn't get Mephisto running so I tried different things to solve the problem. However, it turned out that the problem was that when running from the command line one of the environment parameters doesn't get set. If you run the command like this everything works:
+{% highlight bash %}
+REQUEST_METHOD=GET public/dispatch.fcgi
+{% endhighlight %}
+
+After dispatch.fcgi was happily returning a response I decided that the problem must be somewhere between Apache and fcgi so I took a look at the Apache error logs. Sure enough, there were a bunch of errors about the permissions on the /public directory being too permissive. Chmod'ing to 755 fixed everything and Mephisto finally came up.
+
+I'm very happy with the current setup. I'm able to develop locally using Locomotive/TextMate/Terminal and deploy the latest code just by running 'cap deploy'. Many thanks to<a href="http://www.thebitguru.com/">TheBitGuru</a> and <a href="http://fluct.isono.us/">fluct.isono.us</a> for their very helpful articles. I'll be happy to answer any questions I can about getting things up and running on Site5.

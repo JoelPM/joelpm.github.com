@@ -1,0 +1,79 @@
+--- 
+wordpress_id: 117
+layout: post
+title: Maven and YUICompressor
+wordpress_url: http://www.joelpm.com/?p=117
+---
+Here's how I use <a href="http://developer.yahoo.com/yui/compressor/">YUICompressor</a> to minify/obfuscate our Javascript during Maven's compile phase.
+
+First, add YUICompressor to your pom as dependency:
+{% highlight xml %}
+  <dependencies>
+    ...
+    <dependency>
+      <groupId>com.yahoo.platform.yui</groupId>
+      <artifactId>yuicompressor</artifactId>
+      <version>2.3.6</version>
+      <type>jar</type>
+    </dependency>
+    ...
+  </dependencies>
+{% endhighlight %}
+
+Once YUICompressor is listed as a dependency we can use the ant-run plugin to invoke it during the build:
+
+{% highlight xml %}
+  <build>
+    <plugins>
+      ...
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.3</version>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <phase>compile</phase>
+            <configuration>
+              <tasks>
+                <property name="yuicompressor.jar" value="${maven.dependency.com.yahoo.platform.yui.yuicompressor.jar.path}"/>
+                <ant antfile="yuicompress.xml" target="compressJS"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      ...
+    </plugins>
+  </build>
+{% endhighlight %}
+
+What we're doing above is hooking the ant-run plugin to the compile phase, creating an ant property that contains the path to yuicompressor.jar, and then invoking a task in an Ant build file called yuicompress.xml. Make sure you specify version 1.3 of the ant-run plugin (or newer) - older versions didn't make the Maven dependency paths available to Ant. The ant file looks like this:
+
+{% highlight xml %}
+<?xml version="1.0" encoding="iso-8859-1"?>
+<project name="MyProject" basedir=".">
+  <target name="compressJS">
+    <echo>Compressing JS:</echo>
+    <apply executable="java" parallel="false" failonerror="true">
+      <fileset dir="src/main/resources/templates" includes="*.js.ftl"/>
+      <arg line="-jar"/>
+      <arg path="${yuicompressor.jar}"/>
+      <arg line="--type js"/>
+      <srcfile/>
+      <arg line="-o"/>
+      <mapper type="glob" from="*.js.ftl" to="target/classes/templates/*-min.js.ftl"/>
+      <targetfile/>
+    </apply>
+  </target>
+</project>
+{% endhighlight %}
+
+In my case I'm compressing Freemarker templates that contain JS, which is why I specified the type as JS. These are in a subdirectory of my resources directory called 'templates.' I have YUICompressor output the compressed version to the corresponding location in the build directory with a slightly modified name so they get packaged with my jar file and are available (along with the uncompressed versions) at runtime.
+
+One thing to note is that the version of YUICompressor available on the Maven repo is slightly outdated. You may want to install the latest jar in your local repo and use that instead.
+
+Thanks to <a href="http://www.julienlecomte.net/blog/">Julien Lecomte</a> and Yahoo for making YUICompressor freely available.

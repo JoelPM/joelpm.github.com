@@ -1,0 +1,105 @@
+--- 
+wordpress_id: 61
+layout: post
+title: Maven Assembly Plugin Woes
+wordpress_url: http://www.joelpm.com/?p=61
+---
+In the last paragraph of my <a href="http://www.joelpm.com/2009/01/22/rest-in-a-jar-maven-spring-jetty-and-jersey/">last post</a> I mentioned a maven 'gotcha' that I had to work around. The problem is that when using the maven-assembly-plugin to create a jar with all dependencies the plugin unpacks all the jars and then repacks them all in a single jar. This works fine as long as there are no overlapping resource names in the set of all jars. Unfortunately, in my limited experience, this has proven to be the exception rather than the rule. If there are resources with the same name (under META-INF for example) the plugin only adds one of them to the final jar.
+
+One way to solve the problem would be to write a <a href="http://maven.apache.org/plugins/maven-assembly-plugin/apidocs/org/apache/maven/plugin/assembly/filter/ContainerDescriptorHandler.html">ContainerDescriptorHandler</a> for each type of resource that overlaps and merge them (or take whatever action is appropriate for that file type). There are two problems that I see with that approach:
+
+<ol>
+  <li>You have to do some kind of analysis to see what resources need ContainerDescriptorHandlers written, and
+  <li>You have to write the ContainerDescriptorHandlers. This is problematic because it's possible that you would add a new dependency and find you now have to write a new ContainerDescriptorHandler because there's a new type of resource conflict - now you're doing development on your project and development on the build system that builds your project (and the latter is probably not what you're being paid to do - also, that work probably wasn't scoped when project dates were being set). And then there's the fact that all my searching for how to create and register a handler didn't turn up a single example.
+</ol>
+
+After being bitten by this gotcha twice in as many days, and in each case spending a whole bunch of time debugging before identifying what the problem was (Hurray for bugs that manifest themselves in extremely varying ways! Almost as fun as multi-threaded code with timing bugs...), I gave up on using the assembly plugin to create a single jar and began looking for alternatives.
+
+After several failed attempts at creating a jar that didn't unpack dependencies and automatically created the manifest with a Class-Path entry pointing to the dependencies I gave up on the idea of a single jar completely. In my searches for a solution I came across the <a href="http://mojo.codehaus.org/appassembler/appassembler-maven-plugin/">Application Assembler Plugin</a>. This plugin creates a parent directory with sub-directories for dependencies, resources, and scripts to start your application. Combining this with the assembly plugin I was able to create a zip file that could be uploaded to the server and deployed. Here's what the relevant section of the pom.xml looks like:
+
+{% highlight xml %}
+    <build>
+    <plugins>
+      <!-- [SNIP] -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <configuration>
+          <assembleDirectory>${project.build.directory}/appassembler</assembleDirectory>
+          <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+          <platforms>
+            <platform>unix</platform>
+          </platforms>
+          <programs>
+            <program>
+              <name>MyApp</name>
+              <mainClass>path.to.my.App</mainClass>
+            </program>
+          </programs>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>assemble</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assemble/DeployBuilder.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>simple-command</id>
+            <phase>package</phase>
+            <goals>
+              <goal>directory-inline</goal>
+              <goal>attached</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- [SNIP] -->
+    </plugins>
+  </build>
+{% endhighlight %}
+
+The above snippet configures the appassembler and assembly plugins. The assembly plugin references an assembly definition under src/assemble that looks like this:
+
+{% highlight xml %}
+<assembly>
+  <id>deploy</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/main/resources</directory>
+      <outputDirectory>etc</outputDirectory>
+      <lineEnding>unix</lineEnding>
+    </fileSet>
+    <fileSet>
+      <directory>target/appassembler/bin</directory>
+      <outputDirectory>bin</outputDirectory>
+      <lineEnding>unix</lineEnding>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <directory>target/appassembler/repo</directory>
+      <outputDirectory>repo</outputDirectory>
+    </fileSet>
+  </fileSets>
+</assembly>
+{% endhighlight %}
+
+The assembly definition creates a zip with the output of the appassembler plugin and also includes any resources from src/main/resources under the directory etc/, which the appassembler startup script will add to the classpath. This <a href="http://jira.codehaus.org/browse/MAPPASM-40">issue in Jira</a> was extremely helpful, though it's a little unfortunate the information wasn't more readily available in docs or somewhere else.
+
+These issues with maven have made me think more about switching to <a href="http://buildr.apache.org/">Buildr</a> when I get a chance. It seems like the amount of XML required to get my projects to build the way I want is continually increasing. Essentially what I'm doing is scripting the build by adding more and more plugins (via XML) and, to be honest, I'd rather use a scripting language for that.

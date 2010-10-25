@@ -1,0 +1,75 @@
+--- 
+wordpress_id: 70
+layout: post
+title: Invoking the Thrift Compiler from Maven
+wordpress_url: http://www.joelpm.com/?p=70
+---
+<a href="http://incubator.apache.org/thrift/">Thrift</a> and <a href="http://code.google.com/p/protobuf/">Protocol Buffers</a> require you to invoke a custom compiler during the build process to generate source code from the message definitions in your .thrift or .proto files. You can accomplish this with Maven by using the antrun plugin. Here's the relevant section from pom.xml:
+
+{% highlight xml %}
+  <profiles>
+    <profile>
+      <id>profile-buildthrift</id>
+      <activation>
+        <file>
+          <exists>/usr/local/bin/thrift</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>generate-sources</id>
+                <phase>generate-sources</phase>
+                <configuration>
+                  <tasks>
+                    <mkdir dir="target/generated-sources" />
+                    <exec executable="${thrift.executable}">
+                      <arg value="--gen" />
+                      <arg value="java:beans"/>
+                      <arg value="-o"/>
+                      <arg value="target/generated-sources"/>
+                      <arg value="src/main/resources/MyThriftMessages.thrift"/>
+                    </exec>
+                    <delete>
+                      <fileset dir="src/main/java/com/joelpm/generated" includes="**/*"/>
+                    </delete>
+                    <copy todir="src/main/java/com/joelpm/generated">
+                      <fileset dir="target/generated-sources/gen-javabean/com/joelpm/generated"/>
+                    </copy>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+{% endhighlight %}
+
+You'll notice that the whole thing is wrapped in a profile with an activation. This is done so machines that don't have the Thrift compiler installed can still build using the most recent checked-in version of the generated files.
+
+Inside the antrun plugin we use four tasks to accomplish what we want:
+
+<ol>
+  <li>Create the output directory for the generated sources under the target directory.</li>
+  <li>Invoke the thrift compiler and tell it to generate Java Bean style getters & setters, to write the output to the directory we just created, and to look for our Thrift file in the src/main/resources directory.</li>
+  <li>Delete all files under src/main/java/com/joelpm/generated</li>
+  <li>Copy all generated source to src/main/java/com/joelpm/generated</li>
+</ol>
+
+You may be wondering why the generated source is added to the src tree (and as a result gets checked into the SCM) instead of being passed to the Java compiler for compilation. I did it this way because I want machines that don't have the Thrift compiler installed to be able to build the project. To be honest, I have mixed feelings about checking the generated source into Subversion, but for now this is what I've settled on.
+
+The last thing to note is that the thrift compiler is going to put the generated java source in com/joelpm/generated because my thrift message definition contains the namespace directive:
+
+{% highlight Text %}
+namespace java com.joelpm.generated
+{% endhighlight %}
+
+I use 'generated' in the package name as a way to call out the fact that the source in that package is generated and should not be modified by hand.

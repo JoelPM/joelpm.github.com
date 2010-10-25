@@ -1,0 +1,20 @@
+--- 
+wordpress_id: 34
+layout: post
+title: Add new files to SVN
+wordpress_url: http://www.joelpm.com/?p=34
+---
+I frequently find myself needing to add a bunch of new files to svn. Here's how to do it for Java files:
+<pre>svn status | grep ^?.*\.java$ | awk '{print $2}' | xargs svn add</pre>
+And here's how it works:
+<pre>svn status |</pre>
+Gets the status from Subversion and pipes it to:
+<pre>grep ^?.*\.java$ |</pre>
+Which matches all lines starting with a question mark (meaning they aren't in the svn repo) and ending in .java and pipes them to:
+<pre>awk '{print $2}' |</pre>
+Which grabs the second column of the line grep returned (the filename including path, relative to the current directory) and pipes it to:
+<pre>xargs svn add</pre>
+Which uses xargs to make sure the length of the command doesn't exceed the allowable limits.
+
+To get just the list of new Java files you could omit the xargs bit:
+<pre>svn status | grep ^?.*\.java$ | awk '{print $2}'</pre>

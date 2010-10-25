@@ -1,0 +1,39 @@
+---
+layout: default
+---
+
+<div class="span-4 colborder">
+  <ul>
+    <li class="at">{{ page.date | date: "%m/%d/%Y" }}</li>
+    <li class="in">{{ page.categories | array_to_sentence_string }}</li>
+  </ul>
+</div>
+
+<div class="last">
+  <h2>{{ page.title }}</h2>
+  {{ content }}
+</div>
+
+<hr>
+
+<div class="last">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript" src="http://disqus.com/forums/joelpm/embed.js"></script>
+  <noscript><a href="http://disqus.com/forums/joelpm/?url=ref">View the discussion thread.</a></noscript>
+  <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+(function() {
+	var links = document.getElementsByTagName('a');
+	var query = '?';
+	for(var i = 0; i < links.length; i++) {
+	  if(links[i].href.indexOf('#disqus_thread') >= 0) {
+  		query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&';
+  	}
+	}
+	document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/joelpm/get_num_replies.js' + query + '"></' + 'script>');
+})();
+//]]>
+</script>

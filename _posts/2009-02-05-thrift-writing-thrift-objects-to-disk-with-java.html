@@ -1,0 +1,90 @@
+--- 
+wordpress_id: 79
+layout: post
+title: "Thrift: Writing Thrift Objects to Disk with Java"
+wordpress_url: http://www.joelpm.com/?p=79
+---
+If you're using files to pass data around between different components of a system it may make sense to use Thrift. Doing so means you get smaller file sizes (assuming you do binary serialization) but still have files that can be easily read in many programming languages.
+
+In Java, writing Thrift objects to disk is straightforward. Here's a utility class that I use for doing so:
+
+{% highlight java %}
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import com.facebook.thrift.TBase;
+import com.facebook.thrift.TException;
+import com.facebook.thrift.protocol.TBinaryProtocol;
+import com.facebook.thrift.transport.TIOStreamTransport;
+
+/**
+ * Simple class that makes it easy to write Thrift objects to disk.
+ * @author Joel Meyer
+ */
+public class ThriftWriter {
+  /** File to write to. */
+  protected final File file;
+  
+  /** For writing to the file. */
+  private BufferedOutputStream bufferedOut;
+
+  /** For binary serialization of objects. */
+  private TBinaryProtocol binaryOut;
+  
+  /**
+    * Constructor.
+    */
+  public ThriftWriter(File file) {
+    this.file = file;
+  }
+  
+  /**
+    * Open the file for writing.
+    */
+  public void open() throws FileNotFoundException {
+    bufferedOut = new BufferedOutputStream(new FileOutputStream(file), 2048);
+    binaryOut = new TBinaryProtocol(new TIOStreamTransport(bufferedOut));
+  }
+  
+  /**
+    * Write the object to disk.
+    */
+  public void write(TBase t) throws IOException {
+    try {
+      t.write(binaryOut);
+      bufferedOut.flush();
+    } catch (TException e) {
+      throw new IOException(e);
+    }
+  }
+  
+  /**
+    * Close the file stream.
+    */
+  public void close() throws IOException {
+    bufferedOut.close();
+  }
+}
+{% endhighlight %}
+
+If you have a Thrift object called Album and you'd like to write a list of them to file you'd do it like so:
+{% highlight java %}
+// Create writer
+ThriftWriter thriftOut = new ThriftWriter(new File("/some/thrift/file.thrifty"));
+
+// Open writer
+thriftOut.open();
+
+// Write the objects to disk
+for (Album album : albums) {
+  thriftOut.write(album);
+}
+
+// Close the writer
+thriftOut.close();
+{% endhighlight %}
+
+ThriftWriter uses the interface com.facebook.thrift.TBase, which defines the methods needed for reading and writing a Thrift object to a Thrift protocol. We could use a single ThriftWriter to write any number of different objects to disk, since they all implement TBase, but then you'd have to make sure you knew what order the objects came in when reading the file.

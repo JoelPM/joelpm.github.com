@@ -1,0 +1,421 @@
+--- 
+wordpress_id: 57
+layout: post
+title: "Rest In a Jar: Maven, Spring, Jetty, and Jersey"
+excerpt: |-
+  Here's a quick example of how to use Maven, Spring, embedded Jetty, and Jersey to build an application that provides a RESTful interface (in a single Jar file).
+  
+  There are four main parts to this project:
+  <ol>
+    <li>First, create and configure the project using Maven.
+    <li>Second, create the resources.
+    <li>Third, create/configure the Jetty server.
+    <li>Finally, tie it all together with Spring.
+  </ol>
+wordpress_url: http://www.joelpm.com/?p=57
+---
+Here's a quick example of how to use Maven, Spring, embedded Jetty, and Jersey to build an application that provides a RESTful interface (in a single Jar file).
+
+There are four main parts to this project:
+<ol>
+  <li>First, create and configure the project using Maven.
+  <li>Second, create the resources.
+  <li>Third, create/configure the Jetty server.
+  <li>Finally, tie it all together with Spring.
+</ol>
+
+First, create your project using Maven:
+{% highlight bash %}
+$ mvn archetype:create -DarchetypeGroupId=org.apache.maven.archetypes -DgroupId=com.joelpm -DartifactId=restInAJar
+{% endhighlight %}
+
+Now we need to configure the project - this includes adding the dependencies and telling Maven where they can be found (the repositories). We also add two plug-ins - one to tell Maven we're using Java 1.6 and the second (the Assembly plug-in) to build a jar file that includes our code as well as all dependencies. Here's what the finished file looks like:
+{% highlight xml %}
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.joelpm</groupId>
+  <artifactId>restInAJar</artifactId>
+  
+  <packaging>jar</packaging>
+  
+  <version>1.0-SNAPSHOT</version>
+  <name>restInAJar</name>
+  <url>http://maven.apache.org</url>
+  
+  <properties>
+    <gson.version>1.2.3</gson.version>
+    <jersey.version>1.0.1</jersey.version>
+    <jetty.version>7.0.0.pre5</jetty.version>
+    <junit.version>3.8.1</junit.version>
+    <spring.version>2.5.6</spring.version>
+  </properties>
+  
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${gson.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-spring</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
+  </dependencies>
+  
+  <build>
+    <plugins>
+      <!-- Tell Maven we're using Java 1.6 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    
+      <!-- Configure the assembly plugin to build a single jar with all dependecies -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <mainClass>com.joelpm.restInAJar.App</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>simple-command</id>
+            <phase>package</phase>
+            <goals>
+              <goal>attached</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <repositories>
+    <!-- Repository for the GSON code -->
+    <repository>
+      <id>gson</id>
+      <url>http://google-gson.googlecode.com/svn/mavenrepo</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    
+    <!-- Repository for the Jersey code -->
+    <repository>
+      <id>maven2-repository.dev.java.net</id>
+      <name>Java.net Repository for Maven</name>
+      <url>http://download.java.net/maven/2/</url>
+      <layout>default</layout>
+    </repository> 
+    
+    <!-- Repository for the Jetty code -->
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <id>codehaus</id>
+      <name>Codehaus Maven2 Repository</name>
+      <url>http://repository.codehaus.org/</url>
+      <layout>default</layout>
+    </repository>
+  </repositories>
+</project>
+{% endhighlight %}
+
+I've set the main class to be com.joelpm.restInAJar.Launcher, which we'll create later on.
+
+Now let's move on to creating a resource. We'll put resources in their own package at com.joelpm.restInAJar.resources. We'll just create a simple resource that provides an in-memory hashmap:
+{% highlight java %}
+package com.joelpm.restInAJar.resources;
+
+import java.lang.reflect.Type;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+/**
+ * This class provides the resource manipulated through the /map path.
+ * We use Spring annotations to declare it as a Singleton and Jersey/JAX-RS
+ * annotations to describe the REST interface.
+ * 
+ * This class is designed to work with Dojo's JsonRest and JsonRestStore,
+ * which is why the PUT/POST methods function the way they do.
+ * 
+ * @author Joel Meyer
+ *
+ */
+@Component
+@Scope("singleton")
+@Path("/map")
+@Produces(MediaType.APPLICATION_JSON)
+public class MapResource {
+  // Map to store the values
+  private final Map<String,String> map = new ConcurrentHashMap<String,String>();
+  
+  // Used to serialize/deserialize JSON
+  private final Gson gson = new Gson();
+  
+  // Needed by Gson to deserialize a Map<String,String>
+  Type stringMapType = new TypeToken<Map<String,String>>(){}.getType();
+  
+  @GET
+  public String getEntireMapJson() {
+    return gson.toJson(map);
+  }
+  
+  @GET
+  @Path("{key}")
+  public String getValueForKeyJson(@PathParam("key") String key) {
+    return gson.toJson(map.get(key));
+  }
+  
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Response addKeyValueJson(String json) {
+    Map<String,String> keyValues = gson.fromJson(json, stringMapType);
+    map.putAll(keyValues);
+    return Response.ok().build();
+  }
+  
+  @PUT
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Path("{key}")
+  public Response putValueJson(@PathParam("key") String key, String json) {
+    String value = gson.fromJson(json, String.class);
+    map.put(key, value);
+    return Response.ok().build();
+  }
+  
+  @DELETE
+  @Path("{key}")
+  public Response deleteKeyValue(@PathParam("key") String key) {
+    map.remove(key);
+    return Response.ok().build();
+  }
+}
+{% endhighlight %}
+
+I've omitted error checking for the sake of brevity in the example above - consider that an exercise for the reader.
+
+With our resource defined we need a way to serve it up, which is where Jetty comes in. Jersey-server provides the com.sun.jersey.spi.spring.container.servlet.SpringServlet which is designed to work with Spring web-apps, but we're going to use a very simple embedded Jetty that we configure programmatically so we need to extend that servlet and create our own:
+{% highlight java %}
+package com.joelpm.restInAJar;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import com.sun.jersey.api.core.ResourceConfig;
+import com.sun.jersey.spi.container.WebApplication;
+import com.sun.jersey.spi.spring.container.SpringComponentProviderFactory;
+import com.sun.jersey.spi.spring.container.servlet.SpringServlet;
+
+/**
+ * Extends {@link SpringServlet} so we can control what context gets passed to the
+ * {@link SpringComponentFactory} and implements {@link ApplicationContextAware} so
+ * that Spring can give us a reference to the application context when it instantiates
+ * this class. We then pass the application context that Spring gave us to the
+ * SpringComponentFactory.
+ * 
+ * @author Joel Meyer
+ *
+ */
+@Component
+@Scope("singleton")
+public class EmbeddedJettySpringServlet extends SpringServlet implements ApplicationContextAware {
+  private static final long serialVersionUID = 1L;
+  private static final Logger LOGGER = Logger.getLogger(EmbeddedJettySpringServlet.class.getName());
+  
+  private ApplicationContext springContext;
+  
+  public EmbeddedJettySpringServlet() {
+    super();
+  }
+  
+  @Override
+  protected void initiate(ResourceConfig rc, WebApplication wa) {
+    try {
+      wa.initiate(rc, new SpringComponentProviderFactory(rc, (ConfigurableApplicationContext) springContext));
+    } catch( RuntimeException e ) {
+      LOGGER.log(Level.SEVERE, "Exception occurred when intializing", e);
+      throw e;
+    }
+  }
+
+  /**
+   * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+   */
+  @Override
+  public void setApplicationContext(ApplicationContext applicationContext)
+      throws BeansException {
+    springContext = applicationContext;
+  }
+}
+{% endhighlight %}
+
+Our EmbeddedJettySpringServlet is ApplicationContextAware so that Spring gives it a reference to the application context when Spring instantiates this class.
+
+Now that we have our modified servlet we just need to create the Jetty server to host it, which we do in the Launcher:
+{% highlight java %}
+package com.joelpm.restInAJar;
+
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.handler.ContextHandlerCollection;
+import org.mortbay.jetty.servlet.Context;
+import org.mortbay.jetty.servlet.ServletHolder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+/**
+ * Configures Jetty.
+ * 
+ * @author Joel Meyer
+ */
+public class Launcher {
+  private final Server server;
+  
+  @Autowired
+  public Launcher(EmbeddedJettySpringServlet restServlet) {
+    server = new Server(8080);
+
+    ContextHandlerCollection contexts = new ContextHandlerCollection();
+    server.setHandler(contexts);
+
+    Context rest = new Context(contexts, "/");
+    rest.getServletContext();
+    rest.addServlet(new ServletHolder(restServlet), "/*");
+  }
+  
+  public void start() {
+    try {
+      server.start();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void stop() {
+    try {
+      server.stop();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+}
+{% endhighlight %}
+
+We're now done with coding, we just need to set up our application-context.xml:
+{% highlight xml %}
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+
+  <!-- This initializes all the classes that we annotated with @Component -->
+  <context:component-scan base-package="com.joelpm.restInAJar"/>
+  
+  <bean name="launcher" class="com.joelpm.restInAJar.Launcher">
+  </bean>
+</beans>
+{% endhighlight %}
+
+Because we annotated the classes with @Component, @Scope, and @Autowire as we went along Spring takes care of most of the work for us. All we have to do is tell Spring to scan our classes looking for those annotations and create the Launcher. In our static main all we have to do is:
+{% highlight java %}
+package com.joelpm.restInAJar;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+/**
+ * 
+ */
+public class App {
+  public static void main(String[] args) {
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application-context.xml");
+    Launcher restInAJarLauncher = (Launcher)applicationContext.getBean("launcher");
+    restInAJarLauncher.start();
+  }
+}
+{% endhighlight %}
+
+Now all that remains is to build and run our server:
+{% highlight bash %}
+$ mvn clean package
+$ java -jar target/restInAJar-1.0-SNAPSHOT-jar-with-dependencies.jar
+{% endhighlight %}
+
+Well, I wish it was that easy. Unfortunately there's a gotcha. When the assembly plugin creates the combined jar it overwrites some files instead of combining them. The Jersey ServiceProvider looks in META-INF/services/ for a text file that lists the classes that provide services of a given type (denoted by the name of the text file). Both jersey-core.jar and jersey-server.jar provide copies of some of these files, but the final assembly only contains the files from jersey-server.jar. The right way to solve this problem is with a ContainerDescriptorHandler that merges these files, but I couldn't find any documentation on how to create one and have Maven use it so I resorted to a hack, which is manually merging these files and placing them in my local resources/META-INF/services directory - these copies then overwrite any provided by the dependencies.

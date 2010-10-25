@@ -1,0 +1,32 @@
+--- 
+wordpress_id: 112
+layout: post
+title: Compiling HAProxy on OS X
+wordpress_url: http://www.joelpm.com/?p=112
+---
+If you want to use PCRE when building HAProxy on your mac (recommended by the docs) and you've installed PCRE using MacPorts (<i>sudo port install pcre</i>), you may need to tweak Makefile.osx to help it find the headers, otherwise you'll see a whole slew of errors starting with this:
+
+<pre>
+In file included from include/types/proxy.h:34,
+                 from include/common/cfgparse.h:29In file included from include/types/proxy.h:34,
+                 from include/common/cfgparse.h:29,
+                 from src/haproxy.c:63:
+include/common/regex.h:28:18:,
+                 from src/haproxy.c:63:
+include/common/regex.h:28:18: error:  error: pcre.h: No such file or directory
+include/common/regex.h:29:23: error: pcreposix.h: No such file or directory
+</pre>
+
+To fix that, open up Makefile.osx and find the two lines that define PCREDIR:
+<pre>
+PCREDIR!= pcre-config --prefix 2>/dev/null || :
+#PCREDIR=/usr/local
+</pre>
+
+I commented out the first line, uncommented the second line and modified it to point at /opt/local instead of /usr/local:
+
+<pre>
+PCREDIR=/opt/local
+</pre>
+
+After that the compile worked. While I was at it I also set ARCH=x86_64 and TARGET=darwin, though I'm not sure if it actually accomplished anything.

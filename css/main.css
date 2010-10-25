@@ -1,0 +1,255 @@
+/* @override 
+	http://localhost:3000/stylesheets/main.css
+	http://localhost:8080/css/main.css
+*/
+
+/*  
+Theme Name: Proper
+Theme URI: http://www.joelpm.com/proper/
+Description: My attempt at a theme
+Version: 0.1
+Author: Joel Meyer
+Author URI: http://www.joelpm.com/
+*/
+
+/*************************************
+ +Containers
+ *************************************/
+body{
+  background:#fff url(../images/bg.png) repeat-x;
+  border-top:5px solid #333;
+  color:#555;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size:62.5%;
+  line-height:1.5;
+  margin:0;
+  padding:0;
+  text-align:center;
+}
+#wrap{
+  margin:0 auto;
+  text-align:left;
+  width:85em;
+  background-color: #333;
+  height: 100%;
+}
+#navbar {
+  background-color: #333;
+  border-bottom: 2px solid #E87830;
+  overflow: auto;
+}
+.nav_list {
+  float: left;
+  width: 100%;
+  margin: 0 0 1em 0;
+  padding: 0 0 .5em 0;
+  list-style: none;
+}
+#pages_nav {
+  padding: 0;
+  width: 100%;
+}
+#categories_nav {
+  padding: 0;
+  width: 100%;
+  margin: 0 0 1em 0;
+  padding: 0 0 0.5em 0;
+}
+#content{
+  width: 100%;
+  background-color: #FFF;
+  padding: 0;
+  margin: 0;
+  font-size: 1.2em;
+}
+#header{
+  background-color: #333;
+  border-bottom: 2px solid #E87830;
+  padding: .5em 1em;
+  margin-bottom: 2em;
+}
+#footer{
+  background: #333;
+  border-top: 1px solid #777;
+  color: #888;
+  clear: both;
+  font-size: 1.1em;
+  padding: 0.5em;
+  bottom: 0px;
+}
+
+/*************************************
+ +Hn and p
+ *************************************/
+h1, h2, h3{
+  font-family: Tahoma, Verdana, Arial, Helvetica, sans-serif;
+  font-weight:normal;
+  letter-spacing: 0px;
+  margin:0;
+}
+.nav_list h2 {
+  display: inline;
+  color: #B4C24B;
+  color: #E87830;
+  color: #666;
+}
+#header h1{
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size:3em;
+  margin:0;
+  margin-right:1em;
+}
+#header h1 a{
+  color:#E87830;
+}
+#header p{
+  color:#aaa;
+  font-size:1.1em;
+  margin:0;
+  margin-top:-0.5em;
+}
+
+/*************************************
+ +Navbar
+ *************************************/
+.sub_nav {
+  font-size: 1em;
+}
+.nav_list li {
+  position: relative;
+  float: left;
+  margin: 0;
+  padding: 0 0 0 1em;
+  background-color: #333;
+}
+.nav_list li.sub_nav {
+  
+}
+
+/*************************************
+ +Article
+ *************************************/
+.article, .results, .page {
+  margin-bottom:3em;
+  overflow: auto;
+}
+.info{
+  padding: .6em 1em 0em 0em;
+  float: left;
+  text-align: right;
+  width: 7em;
+  border-top: 1px dashed #aaa;
+  border-right: 1px solid #fff;
+}
+.info span {
+  display: block;
+}
+.main {
+  float: left;
+  width: 50em;
+  padding-right: 1em;
+  padding-left: 1em;
+  border-left: 1px dashed #aaa;
+  border-right: 1px dashed #aaa;
+}
+.title h2 {
+  font-size:2.2em;
+}
+.title h2 a {
+  color:#B4C24B;
+}
+.title h2 a:hover {
+  color:#58BBEB;
+}
+.title h3 {
+  font-size:1.8em;
+  color:#6F6F6F;
+}
+.body {
+  padding-left: .4em;
+}
+.info ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.info .by {
+}
+.info .at {
+}
+.info .in {
+}
+.info .commentslink{
+}
+
+/*************************************
+ +Comments
+ *************************************/
+.commentsblock {
+  margin: 2em 0 0 0;
+  padding:1em;
+  background-color: #e4e4e4;
+}
+.commentsblock textarea{
+  width:35em;
+}
+.commentsblock input, .commentsblock textarea{
+  border:1px solid #d1d1d1;
+}
+.commentsblock textarea:focus{
+  background:#eee;
+  border:1px solid #a1a1a1;
+}
+.commentsblock textarea:focus, .commentsblock input:focus{
+  background:#eee;
+  border:1px solid #a1a1a1;
+}
+.commentauthor{
+  display:block;
+  font-size:1.5em;
+}
+ol.commentlist{
+  color:#777;
+  font-size:0.9em;
+  list-style-type:none;
+  margin:0;
+  margin-top:1.5em;
+  padding:0;
+}
+.commentlist li{
+  margin-bottom:0.5em;
+  padding:0.5em 1em;
+}
+.alt{
+  background:#f3f5e9;
+  border:1px dotted #d1d1d1;
+  padding:0.5em;
+}
+h3#comments{
+  font-size:1.6em;
+}
+
+/*************************************
+ +Search
+ *************************************/
+.results .body ul {
+  list-style: none;
+  padding: 1em;
+}
+
+/*************************************
+ +Misc
+ *************************************/
+a{
+	color:#579;
+	text-decoration:none;
+}
+a:hover{
+	color:#CC0000;
+}
+h2 a:hover{
+	color: #579;
+}
+form {
+	display: inline;
+}
