@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Custom Walmart tag calling Qa OX3 Ad Server, 300x250 size</title>
+<script type="text/javascript">
+  function getURLParameter(name) {
+    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
+  }
+  var OX_doc_domain = getURLParameter("doc_domain");
+</script>
+
+</head>
+<body>
+<p>This test requires the query arg <strong>doc_domain</strong>: document.domain will be set to this value. Should be a super-domain of this page, e.g. http://www.oxtest.com/lorem/ipsum should have doc_domain=oxtest.com.<br>
+  </p>
+    <p> There are following Networks targeting this site. To deliver tag from a specific Network, call the segment beacon (as) that the network is targeting<br>
+  To call a segment beacon use: http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as={id} <br>
+  To remove a segment use: http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?ds={id}<br><br>
+  Networks:<br>
+  0. OpenX Market, SSRTB bid - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26090' target=_blank>as=26090</a><br>
+  1. Cox Digital Solutions - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26091' target=_blank>as=26091</a><br>
+  2. Value Click Media - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26092' target=_blank>as=26092</a><br>
+  3. Criteo - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26093' target=_blank>as=26093</a><br>
+  4. contextweb - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26096' target=_blank>as=26096</a><br>
+  5. specific click - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26097' target=_blank>as=26097</a><br>
+  6. lijit - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26098' target=_blank>as=26098</a><br>
+  7. interclick - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26099' target=_blank>as=26099</a><br>
+  8. Collective Media - <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26100' target=_blank>as=26100</a><br>
+  9. UAC Advertising.com- <a href='http://qa3-instance3-d.openxenterprise.com/w/1.0/rs?as=26101' target=_blank>as=26101</a><br>
+  </p>
+<script type='text/javascript'>
+  if ( !(OX_doc_domain) ) {
+    document.write(">>>>> QUERY ARG NOT DETECTED! <<<<<");
+  } else {
+    document.domain = OX_doc_domain;// this is what we're working around
+  }
+</script>
+<hr>
+This is custom Walmart tag calling QA OX3 Ad Server<br>
+<br>It's an:<br>
+
+
+<div><u>The ad size is 300x250 </u><br>
+<div id="slot217114"><noscript><iframe id="4875782533" name="4875782533" src="http://qa3-instance3-d.openxenterprise.com/w/1.0/afr?auid=217114&cb=%%REALRAND%%&r0=%%C%%" frameborder="0" scrolling="no" width="160" height="600"><a href="%%C%%http%3A%2F%2Fqa3-instance3-d.openxenterprise.com%2Fw%2F1.0%2Frc%3Fcs%3D4875782533%26cb%3D%%REALRAND%%" ><img src="http://qa3-instance3-d.openxenterprise.com/w/1.0/ai?auid=217114&cs=4875782533&cb=%%REALRAND%%" border="0" alt=""></a></iframe></noscript></div>
+<script type="text/javascript" src="http://qa3-instance3-d.openxenterprise.com/w/1.0/jstag?oxns=womdbg"></script>
+<script type="text/javascript">
+var oxAddLoad=oxAddLoad||function(func){if(window.addEventListener){window.addEventListener('load',func,false);}else if(document.addEventListener){document.addEventListener('load',func,false);}else if(window.attachEvent){window.attachEvent('onload',func);}else if(typeof window.onload!='function'){window.onload=func;}else{var oldonload=window.onload;window.onload=function(){oldonload();func();};}}
+oxAddLoad(function(){setTimeout(function(){OX_womdbg.load({auid:217114,slot_id:'slot217114','r0':'%%C%%'})},250);});
+</script>
+
+</div>
+
+
+</body>
+</html>
