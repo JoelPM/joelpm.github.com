@@ -1,1 +1,5 @@
+_site/
+bin/
 *.swp
+Gemfile.lock
+
