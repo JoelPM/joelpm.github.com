@@ -1,0 +1,8 @@
+/* This site was made by Joel Meyer, or at least the content parts and the stitching together of various technologies. */
+/* www.joelpm.com */
+/* humanstxt.org */
+
+/* SITE */
+  Standards: HTML5, CSS3
+  Components: jQuery, Orbit, Reveal
+  Software: Vim, Git, Jekyll

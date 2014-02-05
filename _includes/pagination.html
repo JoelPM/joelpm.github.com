@@ -1,0 +1,32 @@
+      <!-- Pagination links -->
+      <ul class="pagination">
+        {% if paginator.page == 1 %} 
+        <li class="arrow unavailable"><a href="">&laquo;</a></li>
+        {% elsif paginator.page == 2 %}
+          {% assign prev_url = '/index.html' | prepend: site.baseurl | replace: '//', '/' %}
+        <li class="arrow"><a href="{{ prev_url }}">&laquo;</a></li>
+        {% else %}
+          {% assign prev_url = paginator.previous_page_path | prepend: site.baseurl | replace: '//', '/' %}
+        <li class="arrow"><a href="{{ prev_url }}">&laquo;</a></li>
+        {% endif %}
+
+        {% for page in (1..paginator.total_pages) %}
+          {% if page == paginator.page %}
+        <li class="current"><a href="">{{ page }}</a></li>
+          {% else %}
+            {% if page == 1 %}
+              {% assign paginate_url = '/index.html' | prepend: site.baseurl | replace: '//', '/' %}
+            {% else %}
+              {% assign paginate_url = site.paginate_path | prepend: site.baseurl | replace: '//', '/' | replace: ':num', page %}
+            {% endif %}
+        <li><a href="{{ paginate_url }}">{{ page }}</a></li>
+          {% endif %}
+        {% endfor %}
+
+        {% if paginator.page == paginator.total_pages %}
+        <li class="arrow unavailable"><a href="">&raquo;</a></li>
+        {% else %}
+          {% assign next_url = paginator.next_page_path | prepend: site.baseurl | replace: '//', '/' %}
+        <li><a href="{{ next_url }}">&raquo;</a></li>
+        {% endif %}
+      </ul>

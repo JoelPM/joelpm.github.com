@@ -1,0 +1,26 @@
+--- 
+layout: post
+title: "Setting up a new VM"
+categories: ['vm', 'tools']
+---
+<p>Every so often I set up a new server somewhere. Here's what I do to configure it.</p>
+
+<ul>
+  <li>add epel repo<li>
+  <li>yum makecache<li>
+  <li>yum install zsh vim_enhanced mosh</li>
+  <li>useradd -U -m -s /bin/zsh USERNAME<li>
+  <li>copy public key to .ssh/authorized_keys2</li>
+
+
+{% highlight sh %}
+curl -v --cookie "cookieName=cookieValue" --header "Accept-Language: en" --header "X-Forwarded-For: 123.123.123.123" "http://localhost:8080/somepage"
+{% endhighlight %}
+
+<ul>
+  <li><strong>-v</strong><br/>Tells curl to be verbose, useful for seeing if your headers are being sent.
+  <li><strong>--cookie "cookieName=cookieValue"</strong><br/>Tells curl to send the cookie header with the given value. Multiple cookies can be sent using "cookieName1=cookieValue1;cookieName2=cookieValue2".
+  <li><strong>--header "headerName: headerValue"</strong><br/>Tells curl to add the header line you specified. You can send multiple headers by giving multiple --header arguments (see above).
+</ul>
+
+<p>The ability to hand-craft HTTP requests is a great feature of curl and makes it a great debugging tool.</p>

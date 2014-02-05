@@ -1,39 +1,57 @@
 ---
 layout: default
 ---
+      <!-- Main Blog Content -->
+      <div class="large-9 columns" role="content">
 
-<div class="span-4 colborder">
-  <ul>
-    <li class="at">{{ page.date | date: "%m/%d/%Y" }}</li>
-    <li class="in">{{ page.categories | array_to_sentence_string }}</li>
-  </ul>
-</div>
+        {% include post.html %}
 
-<div class="last">
-  <h2>{{ page.title }}</h2>
-  {{ content }}
-</div>
+        <hr />
 
-<hr>
+        {% include comments.html %}
 
-<div class="last">
-  <div id="disqus_thread"></div>
-  <script type="text/javascript" src="http://disqus.com/forums/joelpm/embed.js"></script>
-  <noscript><a href="http://disqus.com/forums/joelpm/?url=ref">View the discussion thread.</a></noscript>
-  <a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
+      </div>
 
-<script type="text/javascript">
-//<![CDATA[
-(function() {
-	var links = document.getElementsByTagName('a');
-	var query = '?';
-	for(var i = 0; i < links.length; i++) {
-	  if(links[i].href.indexOf('#disqus_thread') >= 0) {
-  		query += 'url' + i + '=' + encodeURIComponent(links[i].href) + '&';
-  	}
-	}
-	document.write('<script charset="utf-8" type="text/javascript" src="http://disqus.com/forums/joelpm/get_num_replies.js' + query + '"></' + 'script>');
-})();
-//]]>
-</script>
+      <!-- Sidebar -->
+   
+      <aside class="large-3 columns">
+
+        {% if page.categories %}   
+        <h5>Categories</h5>
+        <ul class="side-nav">
+          {% for category in page.categories %}
+          <li><a href="#">{{ category }}</a></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if page.tags %}   
+        <h5>Tags</h5>
+        <ul class="side-nav">
+          {% for tag in page.tags %}
+          <li><a href="#">{{ tag }}</a></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+   
+        <div class="panel">
+          <script type='text/javascript'>
+            googletag.cmd.push(function() {
+              googletag.defineSlot('/30503480/joelpm_post', [160, 600], 'gpt-ad-1').addService(googletag.pubads());
+              googletag.pubads().enableSingleRequest();
+              googletag.enableServices();
+            });
+          </script>
+
+          <!-- joelpm_post -->
+          <div id='gpt-ad-1' style='width:160px; height:600px;'>
+            <script type='text/javascript'>
+              googletag.cmd.push(function() { googletag.display('gpt-ad-1'); });
+            </script>
+          </div>
+        </div>
+   
+      </aside>
+   
+      <!-- End Sidebar -->
+    </div>
