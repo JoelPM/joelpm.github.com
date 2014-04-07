@@ -1,3 +1,4 @@
 paginate: 3
 timezone: America/Los_Angeles
 excerpt_separator: "\n"
+markdown: kramdown
