@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <title>UID2 Demo</title>
     <script>
-        var UID2TOKEN = null;
-        var PREBID_TIMEOUT = 2000;
+        let EMAIL = null;
+        let UID2TOKEN = null;
+        let PREBID_TIMEOUT = 2000;
 
-        var adUnits = [
+        let adUnits = [
             {
                 code: 'test-div',
                 mediaTypes: {
@@ -35,14 +36,14 @@
             }
         ];
 
-        var pbjs = pbjs || {};
+        let pbjs = pbjs || {};
         pbjs.que = pbjs.que || [];
 
     </script>
     <script async src="//acdn.adnxs.com/prebid/not-for-prod/prebid.js"></script>
 
     <script>
-        var googletag = googletag || {};
+        let googletag = googletag || {};
         googletag.cmd = googletag.cmd || [];
         googletag.cmd.push(function () {
             googletag.pubads().disableInitialLoad();
@@ -102,13 +103,13 @@
 
     <script>
         (function () {
-            var gads = document.createElement('script');
+            let gads = document.createElement('script');
             gads.async = true;
             gads.type = 'text/javascript';
-            var useSSL = 'https:' == document.location.protocol;
+            let useSSL = 'https:' === document.location.protocol;
             gads.src = (useSSL ? 'https:' : 'http:') +
                 '//www.googletagservices.com/tag/js/gpt.js';
-            var node = document.getElementsByTagName('script')[0];
+            let node = document.getElementsByTagName('script')[0];
             node.parentNode.insertBefore(gads, node);
         })();
     </script>
@@ -125,15 +126,17 @@
 <body>
 <h2>Prebid.org UID2.0 Test Page</h2>
 
-<form action="https://integ.uidapi.com/token/generate" method="GET" Authorization="Bearer <your api key>">
+<form action="?" method="GET">
     <div>
-        <label for="say">email?</label>
-        <input name="say" id="say" value="fake@email.com">
+        <label for="email_address">email?</label>
+        <input name="email_address" id="email_address" value="me@example.com">
     </div>
     <div>
-        <button>Send my email</button>
+        <button>Generate Token</button>
     </div>
 </form>
+
+<h3>UI2 Token: UID2_TOKEN</h3>
 
 <div id='test-div'>
     <script>
