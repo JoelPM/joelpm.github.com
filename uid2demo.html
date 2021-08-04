@@ -129,12 +129,15 @@
 <form method="POST">
     <div>
         <label for="email_address">email?</label>
-        <input name="email_address" id="email_address" value="me@example.com">
+        <input name="email_address" id="email_address">
     </div>
     <div>
         <button>Generate Token</button>
     </div>
 </form>
+<script>
+    document.getElementById('email_address').value = email;
+</script>
 
 <h3>UID2 Advertising Token: UID2_TOKEN</h3>
 
